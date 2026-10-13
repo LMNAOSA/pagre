@@ -114,8 +114,9 @@ const OPENING = {
 };
 
 // Health, Education and Training share the opening's camera direction (the
-// PACRE-198 pose, az 53, low and looking up). The camera lifts just enough to
-// keep each floor readable as the stack separates, then settles back.
+// PACRE-198 pose, az 53, low and looking up). The camera stays near the ground
+// (lifting just enough to keep each floor readable), so that Together is a real
+// climb from the ground up to the drone photo's viewpoint.
 // Health: the ground floor in blue; Level 02 and the roof hover above it.
 const HEALTH = {
   cam:       {az: 53.05, el: 5},
@@ -129,8 +130,8 @@ const HEALTH = {
 
 // Education (School of the Air): Level 02 in blue, between the ground floor and the roof.
 const EDUCATION = {
-  cam:       {az: 53.05, el: -3},
-  camNarrow: {az: 53.05, el: -1},
+  cam:       {az: 53.05, el: -11},
+  camNarrow: {az: 53.05, el: -6},
   frame:     ['groundShell', 'upperShell'],
   fillNarrow:  0.94,
   lift:      {upperShell: 26, upperRooms: 26, roof: 56},
@@ -140,9 +141,9 @@ const EDUCATION = {
 
 // Training: the same floor from the opposite corner.
 const TRAINING = {
-  cam:       {az: 53.05, el: -6.67},
-  camNarrow: {az: 53.05, el: -5},
-  frame:     ['upperShell', 'roof'],
+  cam:       {az: 53.05, el: -13},
+  camNarrow: {az: 53.05, el: -7},
+  frame:     ['groundShell', 'upperShell'],
   fillNarrow:  0.94,
   lift:      {upperShell: 26, upperRooms: 26, roof: 56},
   alpha:     {groundShell: 1, groundRooms: 0, upperShell: 1, upperRooms: 0, roof: 1},
@@ -612,6 +613,9 @@ try {
       ox: mix(a.ox, b.ox, tCam),
       oy: mix(a.oy, b.oy, tCam)
     };
+    // Never below ground: keep the eye at least 2 units up (lift the angle if needed).
+    const eyeY = cam.target[1] + cam.dist * Math.sin(cam.el * DEG);
+    if (eyeY < 2) cam.el = Math.asin(clamp((2 - cam.target[1]) / cam.dist, -1, 1)) / DEG;
     applyCamera(camera, cam);
 
     // Layers: lift, visibility and tint, each on its own staggered clock.
