@@ -116,33 +116,33 @@ const OPENING = {
 // The floors separate into a stack with room to see into each one.
 // Health: the ground floor in blue; Level 02 and the roof hover above it.
 const HEALTH = {
-  cam:       {az: 30, el: 36},
-  camNarrow: {az: 18, el: 40},
-  frame:     ['groundShell'],
-  fillNarrow:  0.96,
-  lift:      {upperShell: 46, upperRooms: 46, roof: 94},
+  cam:       {az: 52, el: 6},
+  camNarrow: {az: 46, el: 8},
+  frame:     ['groundShell', 'upperShell'],
+  fillNarrow:  0.94,
+  lift:      {upperShell: 30, upperRooms: 30, roof: 60},
   alpha:     {groundShell: 1, groundRooms: 0, upperShell: 1, upperRooms: 0, roof: 1},
   tint:      {groundShell: 1, upperShell: 0}
 };
 
 // Education (School of the Air): Level 02 in blue, between the ground floor and the roof.
 const EDUCATION = {
-  cam:       {az: 36, el: 34},
-  camNarrow: {az: 20, el: 40},
-  frame:     ['upperShell'],
-  fillNarrow:  0.96,
-  lift:      {upperShell: 28, upperRooms: 28, roof: 76},
+  cam:       {az: 40, el: -4},
+  camNarrow: {az: 36, el: -2},
+  frame:     ['groundShell', 'upperShell'],
+  fillNarrow:  0.94,
+  lift:      {upperShell: 26, upperRooms: 26, roof: 56},
   alpha:     {groundShell: 1, groundRooms: 0, upperShell: 1, upperRooms: 0, roof: 1},
   tint:      {groundShell: 0, upperShell: 1}
 };
 
 // Training: the same floor from the opposite corner.
 const TRAINING = {
-  cam:       {az: -34, el: 40},
-  camNarrow: {az: -20, el: 44},
-  frame:     ['upperShell'],
-  fillNarrow:  0.96,
-  lift:      {upperShell: 28, upperRooms: 28, roof: 76},
+  cam:       {az: -38, el: 2},
+  camNarrow: {az: -32, el: 4},
+  frame:     ['upperShell', 'roof'],
+  fillNarrow:  0.94,
+  lift:      {upperShell: 26, upperRooms: 26, roof: 56},
   alpha:     {groundShell: 1, groundRooms: 0, upperShell: 1, upperRooms: 0, roof: 1},
   tint:      {groundShell: 0, upperShell: 1}
 };
@@ -629,6 +629,8 @@ try {
         material.opacity = alpha[name];
         material.depthWrite = solid;
         if (TINTED.includes(name)) material.color.copy(material.userData.base).lerp(ACCENT, tint[name] * TINT_STRENGTH);
+        // Seen from below, the blue floor would fall into shadow; a little glow keeps it light blue.
+        if (TINTED.includes(name) && material.emissive) material.emissive.copy(ACCENT).multiplyScalar(0.32 * tint[name]);
       }
     }
     // Flights to and from the photo-matched views pass through framings neither
