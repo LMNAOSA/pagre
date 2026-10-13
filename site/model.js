@@ -113,11 +113,13 @@ const OPENING = {
   ]}
 };
 
-// The floors separate into a stack with room to see into each one.
+// Health, Education and Training share the opening's camera direction (the
+// PACRE-198 pose, az 53, low and looking up). The camera lifts just enough to
+// keep each floor readable as the stack separates, then settles back.
 // Health: the ground floor in blue; Level 02 and the roof hover above it.
 const HEALTH = {
-  cam:       {az: 52, el: 6},
-  camNarrow: {az: 46, el: 8},
+  cam:       {az: 53.05, el: 5},
+  camNarrow: {az: 53.05, el: 7},
   frame:     ['groundShell', 'upperShell'],
   fillNarrow:  0.94,
   lift:      {upperShell: 30, upperRooms: 30, roof: 60},
@@ -127,8 +129,8 @@ const HEALTH = {
 
 // Education (School of the Air): Level 02 in blue, between the ground floor and the roof.
 const EDUCATION = {
-  cam:       {az: 40, el: -4},
-  camNarrow: {az: 36, el: -2},
+  cam:       {az: 53.05, el: -3},
+  camNarrow: {az: 53.05, el: -1},
   frame:     ['groundShell', 'upperShell'],
   fillNarrow:  0.94,
   lift:      {upperShell: 26, upperRooms: 26, roof: 56},
@@ -138,8 +140,8 @@ const EDUCATION = {
 
 // Training: the same floor from the opposite corner.
 const TRAINING = {
-  cam:       {az: -38, el: 2},
-  camNarrow: {az: -32, el: 4},
+  cam:       {az: 53.05, el: -6.67},
+  camNarrow: {az: 53.05, el: -5},
   frame:     ['upperShell', 'roof'],
   fillNarrow:  0.94,
   lift:      {upperShell: 26, upperRooms: 26, roof: 56},
@@ -229,6 +231,7 @@ try {
   const fits = new Map();   // view -> {az, el, target, dist, fov, ox, oy}
   const POINTS_PER_LAYER = 4000;
 
+  const centroids = {};   // layer name -> [x, y, z] average of its sampled vertices
   function collectFramePoints() {
     const v = new THREE.Vector3();
     for (const name of LAYER_NAMES) {
@@ -245,6 +248,9 @@ try {
         }
       }
       framePoints[name] = Float32Array.from(out);
+      const c = [0, 0, 0], n = out.length / 3 || 1;
+      for (let i = 0; i < out.length; i += 3) { c[0] += out[i] / n; c[1] += out[i + 1] / n; c[2] += out[i + 2] / n; }
+      centroids[name] = c;
     }
   }
 
@@ -654,6 +660,14 @@ try {
         applyCamera(camera, {...cam, fov: 2 * Math.atan(Math.tan(cam.fov * DEG / 2) / k) / DEG, ox: cam.ox * k, oy: cam.oy * k});
       }
     }
+    // Where the photo cards grow from (the focus floor) and fly back into (the
+    // middle of the building), in canvas pixels, for story.js.
+    const focus = tint.groundShell > 0.5 ? 'groundShell' : tint.upperShell > 0.5 ? 'upperShell' : null;
+    const toScreen = (p, dy = 0) => { const v = new THREE.Vector3(p[0], p[1] + dy, p[2]).project(camera); return [(v.x + 1) / 2 * canvas.clientWidth, (1 - v.y) / 2 * canvas.clientHeight]; };
+    const core = [0, 0, 0].map((_, i) => (centroids.groundShell[i] + centroids.upperShell[i] + centroids.roof[i]) / 3);
+    core[1] = (centroids.groundShell[1] + (centroids.upperShell[1] + (lift.upperShell || 0)) + (centroids.roof[1] + (lift.roof || 0))) / 3;
+    window.rfdsAnchors = {floor: focus ? toScreen(centroids[focus], lift[focus] || 0) : null, core: toScreen(core)};
+
     shadow.material.opacity = alpha.groundShell;
     shadow.visible = alpha.groundShell > 0.01;
 
