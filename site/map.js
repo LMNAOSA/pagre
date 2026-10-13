@@ -162,7 +162,10 @@ async function init() {
   const arcs = scene.primitives.add(new C.PolylineCollection());
   const geodesic = new C.EllipsoidGeodesic();
   const start = C.Cartographic.fromDegrees(SITE.lon, SITE.lat);
-  for (const [name, lon, lat] of TOWNS) {
+  // On narrow screens, fewer towns so the names do not pile up.
+  const FEW = ['Coober Pedy', 'Roxby Downs', 'Woomera', 'Marree', 'Oodnadatta', 'Whyalla', 'Ceduna'];
+  const towns = container.clientWidth < 560 ? TOWNS.filter(t => FEW.includes(t[0])) : TOWNS;
+  for (const [name, lon, lat] of towns) {
     const end = C.Cartographic.fromDegrees(lon, lat);
     const position = C.Cartesian3.fromDegrees(lon, lat);
     points.add({position, pixelSize: 5, color: C.Color.WHITE, distanceDisplayCondition: far});
