@@ -1,0 +1,10 @@
+.DS_Store
+Thumbs.db
+.env
+.env.*
+!.env.example
+node_modules/
+.openai/
+*.tar.gz
+# Mapbox token (see site/map.js)
+site/mapbox-token.js
